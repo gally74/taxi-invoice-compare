@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Taxi invoice compare</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Taxi invoice compare</h1>
+      <p>Check each ABC invoice trip against your Outlook calendar export.</p>
+    </header>
+
+    <p class="privacy">
+      <strong>Private in your browser.</strong> Files are not uploaded to GitHub or any server.
+      Everything runs on this page on your PC.
+    </p>
+
+    <section class="card">
+      <div class="file-row">
+        <label for="calendar">Calendar export (TaxiCalendar….txt)</label>
+        <input type="file" id="calendar" accept=".txt,text/plain" />
+      </div>
+      <div class="file-row">
+        <label for="invoice">Invoice text (ABC_Invoice….txt)</label>
+        <input type="file" id="invoice" accept=".txt,text/plain" />
+      </div>
+      <button type="button" id="compareBtn">Compare</button>
+    </section>
+
+    <div id="error" class="error" role="alert"></div>
+
+    <section id="results" class="card" aria-live="polite">
+      <div class="stats">
+        <div class="stat">
+          <div class="num" id="statInvoice">0</div>
+          <div class="lbl">Invoice trips</div>
+        </div>
+        <div class="stat ok">
+          <div class="num" id="statMatched">0</div>
+          <div class="lbl">Matched</div>
+        </div>
+        <div class="stat bad">
+          <div class="num" id="statMissing">0</div>
+          <div class="lbl">Not in calendar</div>
+        </div>
+      </div>
+
+      <div id="missingBlock"></div>
+
+      <div class="actions">
+        <button type="button" class="secondary" id="downloadBtn">Download report (.txt)</button>
+      </div>
+
+      <details>
+        <summary style="cursor:pointer;color:var(--muted);margin-top:1rem">Full text report</summary>
+        <pre class="report" id="reportPre"></pre>
+      </details>
+    </section>
+
+    <footer>
+      Same logic as TaxiCompareTxt.exe ·
+      <a href="https://github.com/gally74/taxi-invoice-compare" style="color:var(--accent)">GitHub</a>
+    </footer>
+  </div>
+
+  <script type="module">
+    import { runCompare } from "./app.js";
+
+    const calInput = document.getElementById("calendar");
+    const invInput = document.getElementById("invoice");
+    const btn = document.getElementById("compareBtn");
+    const errEl = document.getElementById("error");
+    const results = document.getElementById("results");
+    const missingBlock = document.getElementById("missingBlock");
+    const reportPre = document.getElementById("reportPre");
+    const downloadBtn = document.getElementById("downloadBtn");
+
+    let lastReport = "";
+
+    function showError(msg) {
+      errEl.textContent = msg;
+      errEl.classList.add("visible");
+      results.classList.remove("visible");
+    }
+
+    function clearError() {
+      errEl.classList.remove("visible");
+    }
+
+    btn.addEventListener("click", async () => {
+      clearError();
+      const cal = calInput.files[0];
+      const inv = invInput.files[0];
+      if (!cal || !inv) {
+        showError("Please choose both .txt files.");
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = "Comparing…";
+      try {
+        const { report, invOnly, matched, invoiceCount } = await runCompare(cal, inv);
+        lastReport = report;
+        document.getElementById("statInvoice").textContent = invoiceCount;
+        document.getElementById("statMatched").textContent = matched.length;
+        document.getElementById("statMissing").textContent = invOnly.length;
+
+        if (invOnly.length === 0) {
+          missingBlock.innerHTML =
+            '<p class="all-ok">All invoice trips have a matching calendar booking.</p>';
+        } else {
+          const ul = document.createElement("ul");
+          ul.className = "missing-list";
+          for (const t of invOnly) {
+            const li = document.createElement("li");
+            li.textContent = `${t.ymd} ${t.hhmm}  ${t.driver}  |  ${t.detail}`;
+            ul.appendChild(li);
+          }
+          missingBlock.innerHTML =
+            "<p><strong>Invoice trips not in your calendar</strong></p>";
+          missingBlock.appendChild(ul);
+        }
+
+        reportPre.textContent = report;
+        results.classList.add("visible");
+      } catch (e) {
+        showError(e.message || String(e));
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Compare";
+      }
+    });
+
+    downloadBtn.addEventListener("click", () => {
+      if (!lastReport) return;
+      const blob = new Blob([lastReport], { type: "text/plain;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "TaxiCompare_Result.txt";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+  </script>
+</body>
+</html>

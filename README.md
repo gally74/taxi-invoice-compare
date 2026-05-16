@@ -1,75 +1,35 @@
-# Taxi invoice compare (GitHub)
+# Taxi invoice compare
 
-Check ABC invoice `.txt` against your Outlook **TaxiCalendar** export — in the cloud, no `.exe` on your work PC.
+Check ABC invoice `.txt` against your Outlook **TaxiCalendar** export.
 
-Same logic as `TaxiCompareTxt.exe` on your home machine.
+## Web app (recommended — work laptop, no install)
 
-**Use a private repository** — invoice and driver names are sensitive.
+**https://gally74.github.io/taxi-invoice-compare/**
 
-Account: **gally74** (same as [weekly-circular-processor](https://github.com/gally74/weekly-circular-processor))
+1. Open the link in your browser.
+2. Choose your two `.txt` files.
+3. Click **Compare**.
+4. Download the report if you want.
 
----
+Files stay **in your browser** — nothing is uploaded to GitHub when you use the webpage.
 
-## Each month (browser only — work laptop OK)
+### Enable the site (once, after pushing `docs/`)
 
-1. Open your repo on GitHub (e.g. `gally74/taxi-invoice-compare`).
-2. Go to folder **`inputs/`** → **Add file** → **Upload files**.
-3. Upload **one** `TaxiCalendar....txt` and **one** `ABC_Invoice....txt`.  
-   Remove/replace any older `.txt` files in `inputs/` first.
-4. **Commit** the upload.
-5. Open **Actions** → workflow **Compare invoice vs calendar** → **Run workflow** → **Run workflow**.  
-   (It also runs automatically when you change files in `inputs/`.)
-6. When the run is green, open the run → **Artifacts** → download **`TaxiCompare_Result`**.
-
-The report lists invoice trips **not** found in your calendar export.
+Repo → **Settings** → **Pages** → Build: **GitHub Actions** (the workflow deploys from `docs/`).
 
 ---
 
-## First-time setup (once, home PC)
+## Also available
 
-### 1. Create a new **private** repo on GitHub
-
-- Click **New** on https://github.com/gally74  
-- Name: `taxi-invoice-compare`  
-- **Private**  
-- Do not add a README (this folder already has one)
-
-### 2. Push this folder to GitHub
-
-In PowerShell (folder = this `taxi-invoice-compare` directory):
-
-```powershell
-cd "C:\Users\Roy\OneDrive - IR\Cursor Projects\Taxi\taxi-invoice-compare"
-git init
-git add .
-git commit -m "Taxi invoice compare for GitHub Actions"
-git branch -M main
-git remote add origin https://github.com/gally74/taxi-invoice-compare.git
-git push -u origin main
-```
-
-(Use GitHub Desktop instead if you prefer.)
-
-### 3. Enable Actions
-
-Repo → **Settings** → **Actions** → **General** → allow actions.
-
----
-
-## Folder layout
-
-```
-taxi-invoice-compare/
-  compare_taxi_txt.py      # compare script
-  inputs/                  # you upload .txt files here
-  output/                  # report written here in CI (artifact download)
-  .github/workflows/       # automation
-```
+- **GitHub Actions** — upload files to `inputs/` and run the workflow (see `.github/workflows/compare.yml`).
+- **TaxiCompareTxt.exe** — Windows standalone app (see parent Taxi project).
 
 ---
 
 ## Privacy
 
-- **Private repo** strongly recommended.  
-- Uploaded files stay in git history until you delete them — remove old months from `inputs/` when done.  
-- GitHub Actions runs on Microsoft-hosted runners; do not use if your employer forbids cloud processing of this data.
+- The **webpage** does not send your files to a server.
+- If you use **Actions** and commit files to `inputs/`, they are stored in the repo history.
+- Use a **private** repo if you use Actions with real data.
+
+Account: **gally74**
