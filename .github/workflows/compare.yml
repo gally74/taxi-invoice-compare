@@ -1,0 +1,50 @@
+name: Compare invoice vs calendar
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths:
+      - "inputs/**"
+      - "compare_taxi_txt.py"
+      - ".github/workflows/compare.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check input files
+        run: |
+          set -e
+          cals=$(ls inputs/TaxiCalendar*.txt 2>/dev/null | wc -l)
+          invs=$(ls inputs/ABC_Invoice*.txt 2>/dev/null | wc -l)
+          echo "TaxiCalendar files: $cals"
+          echo "ABC_Invoice files: $invs"
+          if [ "$cals" -ne 1 ] || [ "$invs" -ne 1 ]; then
+            echo "::error::Need exactly ONE TaxiCalendar*.txt and ONE ABC_Invoice*.txt in inputs/"
+            exit 1
+          fi
+
+      - name: Run compare
+        run: |
+          python compare_taxi_txt.py \
+            --compare-dir inputs \
+            --out output/TaxiCompare_Result.txt
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: TaxiCompare_Result
+          path: output/TaxiCompare_Result.txt
+          retention-days: 30

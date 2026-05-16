@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+output/*
+!output/.gitkeep
+*.exe
+dist/
+build/
+.DS_Store
+
+# Do not commit real invoice/calendar exports (upload via GitHub web each month)
+inputs/*.txt
